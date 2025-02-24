@@ -69,7 +69,10 @@
         const { Sider, Content } = Layout;
 
         // API 基础URL配置
-        const API_BASE_URL = window.location.protocol + '//' + window.location.hostname;
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE_URL = isDevelopment 
+            ? `http://${window.location.hostname}:5000`
+            : window.location.protocol + '//' + window.location.hostname;
 
         // 欢迎页面组件
         const Welcome = () => {
