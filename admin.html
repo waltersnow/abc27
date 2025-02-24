@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABC国际商服 - 后台管理</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@4.24.7/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@4.24.7/dist/antd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.18.13/babel.min.js"></script>
+    <style>
+        #app {
+            min-height: 100vh;
+        }
+        .ant-layout {
+            min-height: 100vh;
+        }
+        .admin-logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            color: #1e88e5;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .ant-layout-content {
+            padding: 24px;
+            background: #f0f2f5;
+        }
+        .site-layout-content {
+            padding: 24px;
+            background: #fff;
+            border-radius: 2px;
+        }
+        .ant-page-header {
+            padding: 16px 24px;
+            background: #fff;
+            margin-bottom: 16px;
+        }
+        .filter-form {
+            margin-bottom: 24px;
+        }
+        .table-container {
+            background: #fff;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .page-subtitle {
+            font-weight: bold;
+            color: #000;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Layout, PageHeader, Form, Input, Select, DatePicker, Button, Table, Space, message, Menu, Dropdown, Modal } = antd;
+        const { RangePicker } = DatePicker;
+        const { Option } = Select;
+        const { Sider, Content } = Layout;
+
+        // 欢迎页面组件
+        const Welcome = () => {
+            return (
+                <div className="site-layout-content" style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '60vh',
+                    fontSize: '24px',
+                    color: '#1e88e5',
+                    fontWeight: 'bold'
+                }}>
+                    欢迎登录ABC国际商服管理后台
+                </div>
+            );
+        };
+
+        // 用户管理组件
+        const UserManagement = () => {
+            const [users, setUsers] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [modalVisible, setModalVisible] = useState(false);
+            const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+            const [selectedUser, setSelectedUser] = useState(null);
+            const [form] = Form.useForm();
+            const [passwordForm] = Form.useForm();
+
+            const columns = [
+                {
+                    title: 'ID',
+                    dataIndex: 'id',
+                    key: 'id',
+                },
+                {
+                    title: '用户名',
+                    dataIndex: 'username',
+                    key: 'username',
+                },
+                {
+                    title: '创建时间',
+                    dataIndex: 'created_at',
+                    key: 'created_at',
+                    render: (text) => moment(text).format('YYYY-MM-DD HH:mm:ss'),
+                    defaultSortOrder: 'ascend',
+                    sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at)
+                },
+                {
+                    title: '操作',
+                    key: 'action',
+                    render: (_, record) => (
+                        <Space>
+                            <Button 
+                                type="link" 
+                                onClick={() => showChangePasswordModal(record)}
+                            >
+                                修改密码
+                            </Button>
+                            {record.username !== 'admin' && (
+                                <Button 
+                                    type="link" 
+                                    danger 
+                                    onClick={() => handleDelete(record.id)}
+                                >
+                                    删除
+                                </Button>
+                            )}
+                        </Space>
+                    ),
+                }
+            ];
+
+            const loadUsers = async () => {
+                try {
+                    setLoading(true);
+                    const response = await fetch('http://localhost:5000/api/users', {
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        const sortedUsers = data.users.sort((a, b) => 
+                            new Date(a.created_at) - new Date(b.created_at)
+                        );
+                        setUsers(sortedUsers);
+                    } else {
+                        message.error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    message.error('加载用户列表失败');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                loadUsers();
+            }, []);
+
+            const handleAddUser = async (values) => {
+                try {
+                    const response = await fetch('http://localhost:5000/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(values),
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        message.success('用户创建成功');
+                        setModalVisible(false);
+                        form.resetFields();
+                        loadUsers();
+                    } else {
+                        message.error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    message.error('创建用户失败');
+                }
+            };
+
+            const handleDelete = async (userId) => {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        message.success('用户删除成功');
+                        loadUsers();
+                    } else {
+                        message.error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    message.error('删除用户失败');
+                }
+            };
+
+            const showChangePasswordModal = (user) => {
+                setSelectedUser(user);
+                setPasswordModalVisible(true);
+                passwordForm.resetFields();
+            };
+
+            const handleChangePassword = async (values) => {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/users/${selectedUser.id}/password`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(values),
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        message.success('密码修改成功');
+                        setPasswordModalVisible(false);
+                        passwordForm.resetFields();
+                    } else {
+                        message.error(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    message.error('修改密码失败');
+                }
+            };
+
+            return (
+                <div className="site-layout-content">
+                    <div style={{ marginBottom: 16 }}>
+                        <Button 
+                            type="primary" 
+                            onClick={() => setModalVisible(true)}
+                        >
+                            添加用户
+                        </Button>
+                    </div>
+
+                    <Table
+                        columns={columns}
+                        dataSource={users}
+                        rowKey="id"
+                        loading={loading}
+                    />
+
+                    <Modal
+                        title="添加用户"
+                        visible={modalVisible}
+                        onCancel={() => {
+                            setModalVisible(false);
+                            form.resetFields();
+                        }}
+                        footer={null}
+                    >
+                        <Form
+                            form={form}
+                            onFinish={handleAddUser}
+                            layout="vertical"
+                        >
+                            <Form.Item
+                                name="username"
+                                label="用户名"
+                                rules={[{ required: true, message: '请输入用户名' }]}
+                            >
+                                <Input />
+                            </Form.Item>
+                            <Form.Item
+                                name="password"
+                                label="密码"
+                                rules={[{ required: true, message: '请输入密码' }]}
+                            >
+                                <Input.Password />
+                            </Form.Item>
+                            <Form.Item>
+                                <Button type="primary" htmlType="submit">
+                                    确定
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                    </Modal>
+
+                    <Modal
+                        title="修改密码"
+                        visible={passwordModalVisible}
+                        onCancel={() => {
+                            setPasswordModalVisible(false);
+                            passwordForm.resetFields();
+                        }}
+                        footer={null}
+                    >
+                        <Form
+                            form={passwordForm}
+                            onFinish={handleChangePassword}
+                            layout="vertical"
+                        >
+                            <Form.Item
+                                name="password"
+                                label="新密码"
+                                rules={[{ required: true, message: '请输入新密码' }]}
+                            >
+                                <Input.Password />
+                            </Form.Item>
+                            <Form.Item>
+                                <Button type="primary" htmlType="submit">
+                                    确定
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                    </Modal>
+                </div>
+            );
+        };
+
+        function AdminPage() {
+            const [form] = Form.useForm();
+            const [data, setData] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [username, setUsername] = useState('');
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [pagination, setPagination] = useState({
+                current: 1,
+                pageSize: 10,
+                total: 0
+            });
+            const [selectedMenu, setSelectedMenu] = useState('home');
+
+            const columns = [
+                {
+                    title: 'ID',
+                    dataIndex: 'id',
+                    key: 'id',
+                },
+                {
+                    title: '姓名',
+                    dataIndex: 'name',
+                    key: 'name',
+                },
+                {
+                    title: '国家区号',
+                    dataIndex: 'country_code',
+                    key: 'country_code',
+                },
+                {
+                    title: '电话号码',
+                    dataIndex: 'phone',
+                    key: 'phone',
+                },
+                {
+                    title: '提交时间',
+                    dataIndex: 'submit_time',
+                    key: 'submit_time',
+                    render: (text) => moment(text).format('YYYY-MM-DD HH:mm:ss'),
+                    defaultSortOrder: 'ascend',
+                    sorter: (a, b) => new Date(a.submit_time) - new Date(b.submit_time)
+                }
+            ];
+
+            const checkAuth = async () => {
+                try {
+                    const response = await fetch('http://localhost:5000/api/check-auth', {
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+                    if (!data.logged_in) {
+                        window.location.href = 'login.html';
+                        return false;
+                    } else {
+                        setUsername(data.username);
+                        setIsAuthenticated(true);
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    window.location.href = 'login.html';
+                    return false;
+                }
+            };
+
+            const loadData = async () => {
+                if (!isAuthenticated) return;
+                
+                try {
+                    setLoading(true);
+                    const response = await fetch('http://localhost:5000/api/contacts', {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const sortedContacts = result.contacts.sort((a, b) => 
+                            new Date(a.submit_time) - new Date(b.submit_time)
+                        );
+                        setData(sortedContacts);
+                        setPagination(prev => ({
+                            ...prev,
+                            total: sortedContacts.length
+                        }));
+                    } else {
+                        if (result.message === '请先登录') {
+                            window.location.href = 'login.html';
+                            return;
+                        }
+                        message.error('加载数据失败：' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    message.error('加载数据失败，请检查服务器连接');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleTableChange = (pagination) => {
+                setPagination(pagination);
+            };
+
+            const handleSearch = (values) => {
+                const { name, phone, countryCode, dateRange } = values;
+                
+                // 检查是否有任何筛选条件
+                const hasFilters = name || phone || countryCode || (dateRange && dateRange.length === 2);
+                
+                // 如果没有任何筛选条件，重新加载全量数据
+                if (!hasFilters) {
+                    loadData();
+                    return;
+                }
+                
+                let filtered = [...data];
+                
+                if (name) {
+                    filtered = filtered.filter(item => 
+                        item.name.toLowerCase().includes(name.toLowerCase())
+                    );
+                }
+                
+                if (phone) {
+                    filtered = filtered.filter(item => 
+                        item.phone.includes(phone)
+                    );
+                }
+                
+                if (countryCode) {
+                    filtered = filtered.filter(item => 
+                        item.country_code === countryCode
+                    );
+                }
+                
+                if (dateRange && dateRange.length === 2) {
+                    const [start, end] = dateRange;
+                    filtered = filtered.filter(item => {
+                        const submitTime = moment(item.submit_time);
+                        return submitTime.isBetween(start, end.endOf('day'));
+                    });
+                }
+                
+                setData(filtered);
+                setPagination(prev => ({
+                    ...prev,
+                    current: 1,
+                    total: filtered.length
+                }));
+            };
+
+            const handleReset = () => {
+                form.resetFields();
+                loadData();
+            };
+
+            useEffect(() => {
+                const init = async () => {
+                    try {
+                        const authResult = await checkAuth();
+                        if (authResult) {
+                            await loadData();
+                        }
+                    } catch (error) {
+                        console.error('Initialization failed:', error);
+                    }
+                };
+                init();
+            }, []);
+
+            // 当认证状态改变时重新加载数据
+            useEffect(() => {
+                if (isAuthenticated) {
+                    loadData();
+                }
+            }, [isAuthenticated]);
+
+            const handleLogout = async () => {
+                try {
+                    const response = await fetch('http://localhost:5000/api/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = 'login.html';
+                    }
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                }
+            };
+
+            const menuItems = [
+                {
+                    key: 'home',
+                    label: '首页',
+                    icon: '🏠'
+                },
+                {
+                    key: 'contacts',
+                    label: '客户管理',
+                    icon: '👥'
+                },
+                {
+                    key: 'users',
+                    label: '用户管理',
+                    icon: '👤'
+                }
+            ];
+
+            return (
+                <Layout>
+                    <Sider theme="light" style={{ padding: '0' }}>
+                        <div className="admin-logo">
+                            ABC国际商服
+                        </div>
+                        <Menu
+                            mode="inline"
+                            selectedKeys={[selectedMenu]}
+                            items={menuItems}
+                            onClick={({ key }) => setSelectedMenu(key)}
+                        />
+                    </Sider>
+                    <Layout.Content>
+                        <PageHeader
+                            subTitle={
+                                <span className="page-subtitle">
+                                    {selectedMenu === 'home' ? '首页' : 
+                                     selectedMenu === 'contacts' ? '客户管理' : '用户管理'}
+                                </span>
+                            }
+                            extra={[
+                                <Dropdown
+                                    key="user"
+                                    overlay={
+                                        <Menu>
+                                            <Menu.Item key="logout" onClick={handleLogout}>
+                                                退出登录
+                                            </Menu.Item>
+                                        </Menu>
+                                    }
+                                >
+                                    <Button type="link">
+                                        {username} ▼
+                                    </Button>
+                                </Dropdown>
+                            ]}
+                        />
+                        
+                        {selectedMenu === 'home' ? (
+                            <Welcome />
+                        ) : selectedMenu === 'contacts' ? (
+                            <div className="site-layout-content">
+                                <Form
+                                    form={form}
+                                    className="filter-form"
+                                    onFinish={handleSearch}
+                                    layout="inline"
+                                >
+                                    <Form.Item name="name">
+                                        <Input placeholder="按姓名搜索" allowClear />
+                                    </Form.Item>
+                                    
+                                    <Form.Item name="phone">
+                                        <Input placeholder="按电话搜索" allowClear />
+                                    </Form.Item>
+                                    
+                                    <Form.Item name="countryCode">
+                                        <Select 
+                                            placeholder="选择国家区号" 
+                                            allowClear
+                                            style={{ width: 160 }}
+                                        >
+                                            <Option value="+86">+86 (中国大陆)</Option>
+                                            <Option value="+852">+852 (香港)</Option>
+                                            <Option value="+853">+853 (澳门)</Option>
+                                            <Option value="+886">+886 (台湾)</Option>
+                                            <Option value="+1">+1 (美国/加拿大)</Option>
+                                            <Option value="+44">+44 (英国)</Option>
+                                            <Option value="+81">+81 (日本)</Option>
+                                            <Option value="+82">+82 (韩国)</Option>
+                                        </Select>
+                                    </Form.Item>
+                                    
+                                    <Form.Item name="dateRange">
+                                        <RangePicker />
+                                    </Form.Item>
+                                    
+                                    <Form.Item>
+                                        <Space>
+                                            <Button type="primary" htmlType="submit">
+                                                搜索
+                                            </Button>
+                                            <Button onClick={handleReset}>
+                                                重置
+                                            </Button>
+                                        </Space>
+                                    </Form.Item>
+                                </Form>
+
+                                <Table
+                                    columns={columns}
+                                    dataSource={data}
+                                    rowKey="id"
+                                    pagination={pagination}
+                                    onChange={handleTableChange}
+                                    loading={loading}
+                                />
+                            </div>
+                        ) : (
+                            <UserManagement />
+                        )}
+                    </Layout.Content>
+                </Layout>
+            );
+        }
+
+        ReactDOM.render(
+            <AdminPage />,
+            document.getElementById('app')
+        );
+    </script>
+</body>
+</html> 

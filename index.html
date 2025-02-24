@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABC国际商服 - 全球贸易增长解决方案专家</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <div class="logo">ABC国际商服</div>
+            <ul id="nav-menu">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#services">核心业务</a></li>
+                <li><a href="#solutions">解决方案</a></li>
+                <li><button class="contact-btn" onclick="openContactModal()">联系我们</button></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="hero-background"></div>
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h1>Building Global Success Today</h1>
+                <p>全球贸易增长解决方案专家，让外贸业务更简单</p>
+                <button class="cta-button" onclick="openContactModal()">联系我们</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">关于我们</h2>
+                    <p>在当今竞争激烈的全球贸易舞台上，ABC国际商服应运而生，成为企业外贸增长的坚实后盾。</p>
+                    <p>我们秉持"让外贸业务更简单"的使命，凭借对行业痛点的深刻洞察与创新思维，整合外贸全流程的专业产品与服务，为客户提供精准匹配、高效便捷的解决方案。</p>
+                    <p>通过持续创新和专业服务，我们助力企业在全球市场中脱颖而出，实现外贸业务的持续增长。</p>
+                </div>
+                <div class="about-image">
+                    <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="ABC国际商服团队" class="team-image">
+                    <div class="image-caption">专业的团队 · 优质的服务</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section-title">核心业务</h2>
+            <div class="service-grid">
+                <div class="service-card">
+                    <h3>营销获客</h3>
+                    <ul>
+                        <li>覆盖215个国家采购决策人数据库</li>
+                        <li>AI驱动的邮件营销系统（95%抵达率）</li>
+                        <li>社媒全域营销解决方案（ROI提升300%）</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <h3>跨境支付</h3>
+                    <ul>
+                        <li>支持142种货币结算</li>
+                        <li>全球本地收款账户</li>
+                        <li>0.3%行业超低费率优势</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <h3>国际物流</h3>
+                    <ul>
+                        <li>海陆空铁多式联运</li>
+                        <li>全球TOP50港口专线</li>
+                        <li>智能报关清关系统</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <h3>退税申报</h3>
+                    <ul>
+                        <li>直连海关总署&税务总局数据系统</li>
+                        <li>RPA智能退税（申报效率提升70%）</li>
+                        <li>多维度合规风控体系</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="solutions" class="solutions">
+        <div class="container">
+            <h2 class="section-title">定制化解决方案</h2>
+            <div class="solution-content">
+                <p>凭借多领域丰富的技术经验和先进的垂直AI大模型能力，为大客户提供全流程、个性化的行业解决方案：</p>
+                <ul>
+                    <li>外贸企业数字孪生系统</li>
+                    <li>智能决策支持平台</li>
+                    <li>全链路数智化解决方案</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>联系我们</h3>
+                    <p>电话：400-XXX-XXXX</p>
+                    <p>邮箱：contact@abcservice.com</p>
+                </div>
+                <div class="copyright">
+                    <p>&copy; 2024 ABC国际商服. 保留所有权利</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 联系我们弹窗 -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeContactModal()">&times;</span>
+            <h3>联系我们</h3>
+            <form id="contactForm" onsubmit="submitForm(event)">
+                <div class="form-group">
+                    <label for="name">姓名</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">联系电话</label>
+                    <div class="phone-input-group">
+                        <select id="countryCode" class="country-code">
+                            <option value="+86">+86</option>
+                            <option value="+852">+852</option>
+                            <option value="+853">+853</option>
+                            <option value="+886">+886</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
+                            <option value="+81">+81</option>
+                            <option value="+82">+82</option>
+                        </select>
+                        <input type="tel" id="phone" name="phone" required pattern="^1[3-9]\d{9}$" placeholder="请输入手机号">
+                    </div>
+                    <span class="error-message" id="phoneError"></span>
+                </div>
+                <button type="submit" class="submit-btn">提交</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 打开弹窗
+        function openContactModal() {
+            document.getElementById('contactModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // 防止背景滚动
+        }
+
+        // 关闭弹窗
+        function closeContactModal() {
+            document.getElementById('contactModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 提交表单
+        function submitForm(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const countryCode = document.getElementById('countryCode').value;
+            const phone = document.getElementById('phone').value;
+            const phoneError = document.getElementById('phoneError');
+            const phoneInput = document.getElementById('phone');
+
+            // 手机号验证规则
+            const phonePatterns = {
+                '+86': /^1[3-9]\d{9}$/, // 中国大陆
+                '+852': /^[5-9]\d{7}$/, // 香港
+                '+853': /^[6]\d{7}$/, // 澳门
+                '+886': /^[0-9]\d{8}$/, // 台湾
+                '+1': /^\d{10}$/, // 美国/加拿大
+                '+44': /^\d{10}$/, // 英国
+                '+81': /^\d{10}$/, // 日本
+                '+82': /^\d{9,10}$/ // 韩国
+            };
+
+            // 根据选择的国家代码验证手机号
+            const pattern = phonePatterns[countryCode];
+            if (!pattern.test(phone)) {
+                phoneInput.classList.add('error');
+                phoneError.textContent = '请输入正确的手机号码格式';
+                phoneError.classList.add('show');
+                return;
+            }
+
+            // 清除错误状态
+            phoneInput.classList.remove('error');
+            phoneError.classList.remove('show');
+            
+            // 提交到服务器
+            fetch('http://localhost:5000/api/submit-contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    countryCode: countryCode,
+                    phone: phone
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('提交成功！我们会尽快与您联系。');
+                    // 清空表单并关闭弹窗
+                    document.getElementById('contactForm').reset();
+                    closeContactModal();
+                } else {
+                    alert('提交失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (error.message.includes('Failed to fetch')) {
+                    alert('无法连接到服务器，请确保服务器已启动');
+                } else {
+                    alert('提交失败，请稍后重试\n错误信息：' + error.message);
+                }
+            });
+        }
+
+        // 监听国家代码变化，更新手机号输入框的验证规则
+        document.getElementById('countryCode').addEventListener('change', function(e) {
+            const phoneInput = document.getElementById('phone');
+            const pattern = phonePatterns[e.target.value];
+            phoneInput.pattern = pattern.source;
+            
+            // 清除错误状态
+            phoneInput.classList.remove('error');
+            document.getElementById('phoneError').classList.remove('show');
+        });
+
+        // 实时验证手机号格式
+        document.getElementById('phone').addEventListener('input', function(e) {
+            const countryCode = document.getElementById('countryCode').value;
+            const pattern = phonePatterns[countryCode];
+            const phoneError = document.getElementById('phoneError');
+            
+            if (!pattern.test(e.target.value)) {
+                e.target.classList.add('error');
+                phoneError.textContent = '请输入正确的手机号码格式';
+                phoneError.classList.add('show');
+            } else {
+                e.target.classList.remove('error');
+                phoneError.classList.remove('show');
+            }
+        });
+
+        // 点击弹窗外部关闭弹窗
+        window.onclick = function(event) {
+            const modal = document.getElementById('contactModal');
+            if (event.target === modal) {
+                closeContactModal();
+            }
+        }
+
+        // 移动端菜单切换
+        function toggleMenu() {
+            const menu = document.getElementById('nav-menu');
+            menu.classList.toggle('show');
+        }
+
+        // 点击菜单项后自动关闭菜单
+        document.querySelectorAll('#nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                const menu = document.getElementById('nav-menu');
+                menu.classList.remove('show');
+            });
+        });
+
+        // 滚动时自动关闭菜单
+        window.addEventListener('scroll', () => {
+            const menu = document.getElementById('nav-menu');
+            menu.classList.remove('show');
+        });
+    </script>
+</body>
+</html> 
