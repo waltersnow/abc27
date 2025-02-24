@@ -374,23 +374,22 @@
             ];
 
             const checkAuth = async () => {
-                // 首先检查本地存储
-                const isLoggedIn = localStorage.getItem('isLoggedIn');
-                if (!isLoggedIn) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
                         credentials: 'include'
                     });
                     const data = await response.json();
                     
-                    if (!data.logged_in) {
+                    if (!data.logged_in || !data.username) {
+                        // 如果没有登录或没有用户名，清除本地存储并跳转
                         localStorage.removeItem('isLoggedIn');
                         window.location.href = 'login.html';
+                        return;
                     }
+
+                    // 更新用户名和认证状态
+                    setUsername(data.username);
+                    setIsAuthenticated(true);
                 } catch (error) {
                     console.error('Auth check failed:', error);
                     localStorage.removeItem('isLoggedIn');

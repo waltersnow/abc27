@@ -20,7 +20,7 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(16))
 # 配置 session
 app.config['SESSION_COOKIE_SECURE'] = False  # 允许 HTTP
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # 允许跨站
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1小时
 app.config['SESSION_COOKIE_DOMAIN'] = None  # 让浏览器自动处理
 
@@ -42,6 +42,18 @@ CORS(app,
 )
 
 db = SQLAlchemy(app)
+
+# 在请求之前处理 session
+@app.before_request
+def before_request():
+    # 如果是预检请求，直接返回
+    if request.method == 'OPTIONS':
+        return
+
+    # 打印请求信息，用于调试
+    app.logger.info(f"Request path: {request.path}")
+    app.logger.info(f"Session data: {dict(session)}")
+    app.logger.info(f"Request cookies: {request.cookies}")
 
 # 定义数据模型
 class Contact(db.Model):
@@ -98,10 +110,16 @@ def login():
     user = User.query.filter_by(username=username).first()
     
     if user and user.check_password(password):
+        session.clear()  # 清除旧的 session
         session.permanent = True  # 设置为永久 session
         session['logged_in'] = True
         session['username'] = username
-        return jsonify({'success': True, 'message': '登录成功'})
+        app.logger.info(f"Login successful. Session data: {dict(session)}")
+        return jsonify({
+            'success': True, 
+            'message': '登录成功',
+            'username': username
+        })
     
     return jsonify({'success': False, 'message': '用户名或密码错误'}), 401
 
@@ -114,10 +132,11 @@ def logout():
 # 获取当前登录状态
 @app.route('/api/check-auth', methods=['GET'])
 def check_auth():
+    app.logger.info(f"Checking auth. Session data: {dict(session)}")
     return jsonify({
         'success': True,
-        'logged_in': session.get('logged_in', False),
-        'username': session.get('username', None)
+        'logged_in': bool(session.get('logged_in')),
+        'username': session.get('username')
     })
 
 @app.route('/api/submit-contact', methods=['POST'])
