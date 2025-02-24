@@ -374,23 +374,44 @@
             ];
 
             const checkAuth = async () => {
+                // 首先检查本地存储
+                const isLoggedIn = localStorage.getItem('isLoggedIn');
+                if (!isLoggedIn) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
                         credentials: 'include'
                     });
                     const data = await response.json();
+                    
                     if (!data.logged_in) {
+                        localStorage.removeItem('isLoggedIn');
                         window.location.href = 'login.html';
-                        return false;
-                    } else {
-                        setUsername(data.username);
-                        setIsAuthenticated(true);
-                        return true;
                     }
                 } catch (error) {
                     console.error('Auth check failed:', error);
+                    localStorage.removeItem('isLoggedIn');
                     window.location.href = 'login.html';
-                    return false;
+                }
+            };
+
+            const handleLogout = async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/logout`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                        localStorage.removeItem('isLoggedIn');
+                        window.location.href = 'login.html';
+                    }
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                    message.error('登出失败，请稍后重试');
                 }
             };
 
@@ -509,21 +530,6 @@
                     loadData();
                 }
             }, [isAuthenticated]);
-
-            const handleLogout = async () => {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/logout`, {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        window.location.href = 'login.html';
-                    }
-                } catch (error) {
-                    console.error('Logout failed:', error);
-                }
-            };
 
             const menuItems = [
                 {
@@ -656,4 +662,4 @@
         );
     </script>
 </body>
-</html> 
+</html>
