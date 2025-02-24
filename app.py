@@ -17,6 +17,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///contacts.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # 使用环境变量中的密钥，如果没有则生成一个
 app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(16))
+# 配置 session
+app.config['SESSION_COOKIE_SECURE'] = False  # 允许 HTTP
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1小时
+app.config['SESSION_COOKIE_DOMAIN'] = os.getenv('SESSION_COOKIE_DOMAIN', None)  # 根据环境设置
 
 # 允许的域名
 ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:8080,http://127.0.0.1:8080,http://abc27.cn').split(',')
@@ -92,6 +98,7 @@ def login():
     user = User.query.filter_by(username=username).first()
     
     if user and user.check_password(password):
+        session.permanent = True  # 设置为永久 session
         session['logged_in'] = True
         session['username'] = username
         return jsonify({'success': True, 'message': '登录成功'})
