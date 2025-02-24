@@ -68,6 +68,9 @@
         const { Option } = Select;
         const { Sider, Content } = Layout;
 
+        // API 基础URL配置
+        const API_BASE_URL = window.location.protocol + '//' + window.location.hostname;
+
         // 欢迎页面组件
         const Welcome = () => {
             return (
@@ -142,7 +145,7 @@
             const loadUsers = async () => {
                 try {
                     setLoading(true);
-                    const response = await fetch('http://localhost:5000/api/users', {
+                    const response = await fetch(`${API_BASE_URL}/api/users`, {
                         credentials: 'include'
                     });
                     const data = await response.json();
@@ -168,7 +171,7 @@
 
             const handleAddUser = async (values) => {
                 try {
-                    const response = await fetch('http://localhost:5000/api/users', {
+                    const response = await fetch(`${API_BASE_URL}/api/users`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -193,7 +196,7 @@
 
             const handleDelete = async (userId) => {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+                    const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
                         method: 'DELETE',
                         credentials: 'include'
                     });
@@ -218,7 +221,7 @@
 
             const handleChangePassword = async (values) => {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/users/${selectedUser.id}/password`, {
+                    const response = await fetch(`${API_BASE_URL}/api/users/${selectedUser.id}/password`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -372,7 +375,7 @@
 
             const checkAuth = async () => {
                 try {
-                    const response = await fetch('http://localhost:5000/api/check-auth', {
+                    const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
                         credentials: 'include'
                     });
                     const data = await response.json();
@@ -396,7 +399,7 @@
                 
                 try {
                     setLoading(true);
-                    const response = await fetch('http://localhost:5000/api/contacts', {
+                    const response = await fetch(`${API_BASE_URL}/api/contacts`, {
                         credentials: 'include',
                         headers: {
                             'Accept': 'application/json',
@@ -509,7 +512,7 @@
 
             const handleLogout = async () => {
                 try {
-                    const response = await fetch('http://localhost:5000/api/logout', {
+                    const response = await fetch(`${API_BASE_URL}/api/logout`, {
                         method: 'POST',
                         credentials: 'include'
                     });

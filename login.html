@@ -45,9 +45,7 @@
         const { Form, Input, Button, message } = antd;
 
         // API 基础URL配置
-        const API_BASE_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:5000' 
-            : 'http://43.160.195.133';
+        const API_BASE_URL = window.location.protocol + '//' + window.location.hostname;
 
         function LoginPage() {
             const [loading, setLoading] = React.useState(false);
