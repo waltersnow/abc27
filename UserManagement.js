@@ -1,3 +1,10 @@
+import { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, Space, message } from 'antd';
+import moment from 'moment';
+
+// API 基础URL配置
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -49,7 +56,7 @@ const UserManagement = () => {
     const loadUsers = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:5000/api/users', {
+            const response = await fetch(`${API_BASE_URL}/api/users`, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -72,7 +79,7 @@ const UserManagement = () => {
 
     const handleAddUser = async (values) => {
         try {
-            const response = await fetch('http://localhost:5000/api/users', {
+            const response = await fetch(`${API_BASE_URL}/api/users`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -97,7 +104,7 @@ const UserManagement = () => {
 
     const handleDelete = async (userId) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
