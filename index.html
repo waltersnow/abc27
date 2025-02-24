@@ -151,6 +151,11 @@
     </div>
 
     <script>
+        // API 基础URL配置
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : `http://${window.location.hostname}`;
+
         // 打开弹窗
         function openContactModal() {
             document.getElementById('contactModal').style.display = 'flex';
@@ -198,7 +203,7 @@
             phoneError.classList.remove('show');
             
             // 提交到服务器
-            fetch('http://localhost:5000/api/submit-contact', {
+            fetch(`${API_BASE_URL}/api/submit-contact`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -292,4 +297,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
