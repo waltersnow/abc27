@@ -333,327 +333,126 @@
         };
 
         function AdminPage() {
-            const [form] = Form.useForm();
-            const [data, setData] = useState([]);
-            const [loading, setLoading] = useState(false);
-            const [username, setUsername] = useState('');
-            const [isAuthenticated, setIsAuthenticated] = useState(false);
-            const [pagination, setPagination] = useState({
-                current: 1,
-                pageSize: 10,
-                total: 0
-            });
-            const [selectedMenu, setSelectedMenu] = useState('home');
+            const [selectedKeys, setSelectedKeys] = React.useState(['welcome']);
+            const [loading, setLoading] = React.useState(false);
+            const [contacts, setContacts] = React.useState([]);
+            const [username, setUsername] = React.useState('');
+            const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
-            const columns = [
-                {
-                    title: 'ID',
-                    dataIndex: 'id',
-                    key: 'id',
-                },
-                {
-                    title: '姓名',
-                    dataIndex: 'name',
-                    key: 'name',
-                },
-                {
-                    title: '国家区号',
-                    dataIndex: 'country_code',
-                    key: 'country_code',
-                },
-                {
-                    title: '电话号码',
-                    dataIndex: 'phone',
-                    key: 'phone',
-                },
-                {
-                    title: '提交时间',
-                    dataIndex: 'submit_time',
-                    key: 'submit_time',
-                    render: (text) => moment(text).format('YYYY-MM-DD HH:mm:ss'),
-                    defaultSortOrder: 'ascend',
-                    sorter: (a, b) => new Date(a.submit_time) - new Date(b.submit_time)
-                }
-            ];
-
-            const checkAuth = async () => {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
-                        credentials: 'include'
-                    });
-                    const data = await response.json();
-                    
-                    if (!data.logged_in || !data.username) {
-                        // 如果没有登录或没有用户名，清除本地存储并跳转
-                        localStorage.removeItem('isLoggedIn');
-                        window.location.href = 'login.html';
-                        return;
-                    }
-
-                    // 更新用户名和认证状态
-                    setUsername(data.username);
-                    setIsAuthenticated(true);
-                } catch (error) {
-                    console.error('Auth check failed:', error);
-                    localStorage.removeItem('isLoggedIn');
-                    window.location.href = 'login.html';
-                }
-            };
-
-            const handleLogout = async () => {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/logout`, {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-                    
-                    if (response.ok) {
-                        localStorage.removeItem('isLoggedIn');
-                        window.location.href = 'login.html';
-                    }
-                } catch (error) {
-                    console.error('Logout failed:', error);
-                    message.error('登出失败，请稍后重试');
-                }
-            };
-
-            const loadData = async () => {
-                if (!isAuthenticated) return;
-                
+            // 加载联系人数据
+            const loadContacts = async () => {
                 try {
                     setLoading(true);
                     const response = await fetch(`${API_BASE_URL}/api/contacts`, {
                         credentials: 'include',
                         headers: {
                             'Accept': 'application/json',
-                            'Content-Type': 'application/json',
                         }
                     });
-                    const result = await response.json();
                     
-                    if (result.success) {
-                        const sortedContacts = result.contacts.sort((a, b) => 
-                            new Date(a.submit_time) - new Date(b.submit_time)
-                        );
-                        setData(sortedContacts);
-                        setPagination(prev => ({
-                            ...prev,
-                            total: sortedContacts.length
-                        }));
+                    if (!response.ok) {
+                        throw new Error('Failed to load contacts');
+                    }
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        setContacts(data.contacts);
                     } else {
-                        if (result.message === '请先登录') {
-                            window.location.href = 'login.html';
-                            return;
-                        }
-                        message.error('加载数据失败：' + result.message);
+                        message.error('加载联系人数据失败');
                     }
                 } catch (error) {
-                    console.error('Error:', error);
-                    message.error('加载数据失败，请检查服务器连接');
+                    console.error('Load contacts failed:', error);
+                    message.error('加载联系人数据失败');
                 } finally {
                     setLoading(false);
                 }
             };
 
-            const handleTableChange = (pagination) => {
-                setPagination(pagination);
+            // 菜单点击处理
+            const handleMenuClick = (key) => {
+                setSelectedKeys([key]);
+                // 如果点击了客户管理菜单，加载联系人数据
+                if (key === 'contacts') {
+                    loadContacts();
+                }
             };
 
-            const handleSearch = (values) => {
-                const { name, phone, countryCode, dateRange } = values;
-                
-                // 检查是否有任何筛选条件
-                const hasFilters = name || phone || countryCode || (dateRange && dateRange.length === 2);
-                
-                // 如果没有任何筛选条件，重新加载全量数据
-                if (!hasFilters) {
-                    loadData();
-                    return;
+            // 渲染内容区域
+            const renderContent = () => {
+                switch (selectedKeys[0]) {
+                    case 'welcome':
+                        return <Welcome />;
+                    case 'contacts':
+                        return <ContactList contacts={contacts} loading={loading} />;
+                    case 'users':
+                        return <UserManagement />;
+                    default:
+                        return <Welcome />;
                 }
-                
-                let filtered = [...data];
-                
-                if (name) {
-                    filtered = filtered.filter(item => 
-                        item.name.toLowerCase().includes(name.toLowerCase())
-                    );
-                }
-                
-                if (phone) {
-                    filtered = filtered.filter(item => 
-                        item.phone.includes(phone)
-                    );
-                }
-                
-                if (countryCode) {
-                    filtered = filtered.filter(item => 
-                        item.country_code === countryCode
-                    );
-                }
-                
-                if (dateRange && dateRange.length === 2) {
-                    const [start, end] = dateRange;
-                    filtered = filtered.filter(item => {
-                        const submitTime = moment(item.submit_time);
-                        return submitTime.isBetween(start, end.endOf('day'));
-                    });
-                }
-                
-                setData(filtered);
-                setPagination(prev => ({
-                    ...prev,
-                    current: 1,
-                    total: filtered.length
-                }));
             };
 
-            const handleReset = () => {
-                form.resetFields();
-                loadData();
-            };
-
-            useEffect(() => {
-                const init = async () => {
-                    try {
-                        const authResult = await checkAuth();
-                        if (authResult) {
-                            await loadData();
-                        }
-                    } catch (error) {
-                        console.error('Initialization failed:', error);
-                    }
-                };
-                init();
+            React.useEffect(() => {
+                // 检查是否已登录
+                checkAuth();
             }, []);
 
-            // 当认证状态改变时重新加载数据
-            useEffect(() => {
-                if (isAuthenticated) {
-                    loadData();
-                }
-            }, [isAuthenticated]);
-
+            // 菜单项配置
             const menuItems = [
                 {
                     key: 'home',
-                    label: '首页',
-                    icon: '🏠'
+                    icon: <HomeOutlined />,
+                    children: [
+                        {
+                            key: 'welcome',
+                            icon: <DashboardOutlined />,
+                            label: '首页'
+                        }
+                    ],
+                    label: '主页'
                 },
                 {
-                    key: 'contacts',
-                    label: '客户管理',
-                    icon: '👥'
-                },
-                {
-                    key: 'users',
-                    label: '用户管理',
-                    icon: '👤'
+                    key: 'management',
+                    icon: <SettingOutlined />,
+                    children: [
+                        {
+                            key: 'contacts',
+                            icon: <TeamOutlined />,
+                            label: '客户管理'
+                        },
+                        {
+                            key: 'users',
+                            icon: <UserOutlined />,
+                            label: '用户管理'
+                        }
+                    ],
+                    label: '系统管理'
                 }
             ];
 
             return (
-                <Layout>
-                    <Sider theme="light" style={{ padding: '0' }}>
-                        <div className="admin-logo">
-                            ABC国际商服
+                <Layout style={{ minHeight: '100vh' }}>
+                    <Sider theme="light">
+                        <div style={{ padding: '20px', textAlign: 'center' }}>
+                            <h2 style={{ margin: 0 }}>管理后台</h2>
                         </div>
                         <Menu
                             mode="inline"
-                            selectedKeys={[selectedMenu]}
+                            selectedKeys={selectedKeys}
                             items={menuItems}
-                            onClick={({ key }) => setSelectedMenu(key)}
+                            onClick={({ key }) => handleMenuClick(key)}
                         />
                     </Sider>
-                    <Layout.Content>
-                        <PageHeader
-                            subTitle={
-                                <span className="page-subtitle">
-                                    {selectedMenu === 'home' ? '首页' : 
-                                     selectedMenu === 'contacts' ? '客户管理' : '用户管理'}
-                                </span>
-                            }
-                            extra={[
-                                <Dropdown
-                                    key="user"
-                                    overlay={
-                                        <Menu>
-                                            <Menu.Item key="logout" onClick={handleLogout}>
-                                                退出登录
-                                            </Menu.Item>
-                                        </Menu>
-                                    }
-                                >
-                                    <Button type="link">
-                                        {username} ▼
-                                    </Button>
-                                </Dropdown>
-                            ]}
-                        />
-                        
-                        {selectedMenu === 'home' ? (
-                            <Welcome />
-                        ) : selectedMenu === 'contacts' ? (
-                            <div className="site-layout-content">
-                                <Form
-                                    form={form}
-                                    className="filter-form"
-                                    onFinish={handleSearch}
-                                    layout="inline"
-                                >
-                                    <Form.Item name="name">
-                                        <Input placeholder="按姓名搜索" allowClear />
-                                    </Form.Item>
-                                    
-                                    <Form.Item name="phone">
-                                        <Input placeholder="按电话搜索" allowClear />
-                                    </Form.Item>
-                                    
-                                    <Form.Item name="countryCode">
-                                        <Select 
-                                            placeholder="选择国家区号" 
-                                            allowClear
-                                            style={{ width: 160 }}
-                                        >
-                                            <Option value="+86">+86 (中国大陆)</Option>
-                                            <Option value="+852">+852 (香港)</Option>
-                                            <Option value="+853">+853 (澳门)</Option>
-                                            <Option value="+886">+886 (台湾)</Option>
-                                            <Option value="+1">+1 (美国/加拿大)</Option>
-                                            <Option value="+44">+44 (英国)</Option>
-                                            <Option value="+81">+81 (日本)</Option>
-                                            <Option value="+82">+82 (韩国)</Option>
-                                        </Select>
-                                    </Form.Item>
-                                    
-                                    <Form.Item name="dateRange">
-                                        <RangePicker />
-                                    </Form.Item>
-                                    
-                                    <Form.Item>
-                                        <Space>
-                                            <Button type="primary" htmlType="submit">
-                                                搜索
-                                            </Button>
-                                            <Button onClick={handleReset}>
-                                                重置
-                                            </Button>
-                                        </Space>
-                                    </Form.Item>
-                                </Form>
-
-                                <Table
-                                    columns={columns}
-                                    dataSource={data}
-                                    rowKey="id"
-                                    pagination={pagination}
-                                    onChange={handleTableChange}
-                                    loading={loading}
-                                />
-                            </div>
-                        ) : (
-                            <UserManagement />
-                        )}
-                    </Layout.Content>
+                    <Layout>
+                        <Header style={{ background: '#fff', padding: '0 20px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                            <Space>
+                                <span>欢迎，{username}</span>
+                                <Button onClick={handleLogout}>退出登录</Button>
+                            </Space>
+                        </Header>
+                        <Content style={{ margin: '24px 16px', padding: 24, background: '#fff', minHeight: 280 }}>
+                            {renderContent()}
+                        </Content>
+                    </Layout>
                 </Layout>
             );
         }
